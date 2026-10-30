@@ -803,6 +803,8 @@ class Panel(ScreenPanel):
             )
         if estimated > 1:
             progress = min(max(print_duration / estimated, 0), 1)
+            # shared with the StandBy screen saver so both show the same numbers
+            self.last_estimate = {"total": estimated, "progress": progress}
             self.labels["est_time"].set_label(self.format_time(estimated))
             self.labels["time_left"].set_label(self.format_eta(estimated, print_duration))
             remaining_label = (

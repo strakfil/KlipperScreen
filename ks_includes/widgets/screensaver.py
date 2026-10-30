@@ -5,6 +5,8 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 
+from ks_includes.widgets.standby import StandBy
+
 
 class ScreenSaver:
     def __init__(self, screen):
@@ -15,6 +17,7 @@ class ScreenSaver:
         self.blackbox = None
         self.delayed = None
         self.delayed_seconds = screen._config.get_main_config().getint("screensaver_wake_delay", 1)
+        self.standby = None
 
     @property
     def is_showing(self):
@@ -52,6 +55,15 @@ class ScreenSaver:
 
         close = Gtk.Button()
         close.connect("clicked", self.close)
+        if self.config.get_main_config().get("screensaver_style", "standby") == "standby":
+            try:
+                self.printer = self.screen.printer
+                self.standby = StandBy(self.screen)
+                close.add(self.standby.root)
+                close.get_style_context().add_class("standby-button")
+            except Exception as e:  # never let a cosmetic screen saver break waking up
+                logging.exception(f"StandBy unavailable: {e}")
+                self.standby = None
 
         box = Gtk.Box(
             halign=Gtk.Align.CENTER,
@@ -70,6 +82,8 @@ class ScreenSaver:
         self.screen.gtk.set_cursor(False, window=self.screen.get_window())
 
         self.blackbox.show_all()
+        if self.standby is not None:
+            self.standby.start()
         self.screen.power_devices(
             None, self.config.get_main_config().get("screen_off_devices", ""), on=False
         )
@@ -98,6 +112,9 @@ class ScreenSaver:
             self.delayed = None
         if not self.is_showing:
             return False
+        if self.standby is not None:
+            self.standby.stop()
+            self.standby = None
         self.screen.overlay.remove(self.blackbox)
         self.blackbox = None
         logging.debug("Closed Screensaver")

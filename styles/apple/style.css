@@ -398,3 +398,15 @@ button.nav-estop label { color: @red; font-weight: 700; }
 button.nav-estop:active { background-color: @red; }
 button.nav-estop:active label { color: #FFFFFF; }
 button.nav-estop:disabled { opacity: .45; }
+
+/* ---------- StandBy screen saver (always on black) ------------------------ */
+button.standby-button, button.standby-button:active { background-color: #000000; border-radius: 0; margin: 0; }
+.standby label { color: #FFFFFF; font-feature-settings: "tnum"; }
+.standby label.standby-clock { font-size: 9.5em; font-weight: 600; letter-spacing: -.02em; }
+.standby label.standby-remaining { font-size: 3.6em; font-weight: 700; }
+.standby label.standby-percent { font-size: 2.4em; font-weight: 700; }
+.standby label.standby-file { font-size: 1.3em; font-weight: 600; }
+.standby label.standby-secondary { font-size: 1.25em; color: #98989F; }
+.standby.standby-night label { color: rgba(255,69,58,0.85); }
+.standby.standby-night label.standby-secondary { color: rgba(255,69,58,0.55); }
+.macro-row-hidden label { color: @label2; }

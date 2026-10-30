@@ -159,7 +159,7 @@ class Panel(ScreenPanel):
             params[result["param"]] = entry
         return params
 
-    def build_row(self, macro, pinned=False, index=0, count=0, can_pin=True):
+    def build_row(self, macro, pinned=False, index=0, count=0, can_pin=True, hidden=False):
         section = self._macro_section(macro)
         if not section or "gcode" not in section or "rename_existing" in section:
             logging.debug(f"Skipping macro {macro}")
@@ -187,7 +187,12 @@ class Panel(ScreenPanel):
         row.get_style_context().add_class("macro-row")
         info = {"row": row, "params": {}}
 
-        if self.editing:
+        if self.editing and hidden:
+            row.add(self._icon_button("visible", "accent", self.unhide, macro, tooltip=_("Show")))
+            row.add(icon)
+            row.add(labels)
+            row.get_style_context().add_class("macro-row-hidden")
+        elif self.editing:
             if pinned:
                 row.add(self._icon_button("decrease", "red", self.unpin, macro,
                                           tooltip=_("Remove from Home")))
@@ -201,6 +206,7 @@ class Panel(ScreenPanel):
                 row.add(self._icon_button("arrow-down", "label", self.move, macro, 1,
                                           sensitive=index < count - 1))
             row.add(self._icon_button("edit", "accent", self.open_editor, macro, tooltip=_("Rename / icon")))
+            row.add(self._icon_button("hidden", "label2", self.hide, macro, tooltip=_("Hide")))
         else:
             row.add(icon)
             info["params"] = self._params(macro)
@@ -233,6 +239,7 @@ class Panel(ScreenPanel):
 
     def load_gcode_macros(self):
         visible = []
+        self.hidden_macros = []
         for macro in self._printer.get_gcode_macros():
             self.options[macro] = {
                 "name": macro,
@@ -244,6 +251,8 @@ class Panel(ScreenPanel):
                 self.options[macro]["section"], macro.lower(), fallback=True
             ):
                 visible.append(macro)
+            else:
+                self.hidden_macros.append(macro)
         for macro in list(self.options):
             self.add_option("options", self.options, macro, self.options[macro])
 
@@ -269,6 +278,13 @@ class Panel(ScreenPanel):
             row = self.build_row(macro, can_pin=can_pin)
             if row:
                 box.add(row)
+        if self.editing and self.hidden_macros:
+            box.add(self._section_header(_("HIDDEN MACROS")))
+            for macro in sorted(self.hidden_macros, key=str.casefold):
+                row = self.build_row(macro, hidden=True)
+                if row:
+                    box.add(row)
+            box.add(self._footnote(_("Hidden macros are not listed and cannot be on Home.")))
         box.show_all()
 
     # ---------------------------------------------------------------- actions
@@ -294,6 +310,24 @@ class Panel(ScreenPanel):
 
     def move(self, widget, macro, delta):
         self.qm.move(macro, delta)
+        self._changed()
+
+    def _set_visible(self, macro, visible):
+        section = f"displayed_macros {self._screen.state.printer_name}"
+        config = self._config.get_config()
+        if section not in config.sections():
+            config.add_section(section)
+        config.set(section, macro.lower(), "True" if visible else "False")
+        self._config.save_user_config_options()
+
+    def hide(self, widget, macro):
+        if self.qm.is_pinned(macro):
+            self.qm.unpin(macro)
+        self._set_visible(macro, False)
+        self._changed()
+
+    def unhide(self, widget, macro):
+        self._set_visible(macro, True)
         self._changed()
 
     def run_gcode_macro(self, widget, macro):

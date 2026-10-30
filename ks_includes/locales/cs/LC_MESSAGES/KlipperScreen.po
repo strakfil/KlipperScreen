@@ -1333,3 +1333,30 @@ msgstr "STOP"
 
 msgid "Back"
 msgstr "Zpět"
+
+msgid "HIDDEN MACROS"
+msgstr "SKRYTÁ MAKRA"
+
+msgid "Hidden macros are not listed and cannot be on Home."
+msgstr "Skrytá makra se nezobrazují v seznamu a nemohou být na Domů."
+
+msgid "Screen saver"
+msgstr "Spořič obrazovky"
+
+msgid "StandBy (clock / print progress)"
+msgstr "StandBy (hodiny / průběh tisku)"
+
+msgid "Black"
+msgstr "Černá"
+
+msgid "StandBy: red at night"
+msgstr "StandBy: v noci červeně"
+
+msgid "With the dark appearance StandBy is shown in dim red"
+msgstr "Při tmavém vzhledu je StandBy tlumeně červený"
+
+msgid "Remaining"
+msgstr "Zbývá"
+
+msgid "Done at %s"
+msgstr "Hotovo v %s"

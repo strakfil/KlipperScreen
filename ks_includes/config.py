@@ -207,6 +207,7 @@ class KlipperScreenConfig:
                     "keyboard_navigation",
                     "enable_addons",
                     "reduce_motion",
+                    "standby_night_red",
                 )
                 strs = (
                     "default_printer",
@@ -227,6 +228,7 @@ class KlipperScreenConfig:
                     "appearance",
                     "accent",
                     "action_bar_position",
+                    "screensaver_style",
                     "light_from",
                     "dark_from",
                 )
@@ -434,6 +436,29 @@ class KlipperScreenConfig:
                         {"name": _("Side bar right"), "value": "right"},
                         {"name": _("Bar at the bottom"), "value": "bottom"},
                     ],
+                }
+            },
+            {
+                "screensaver_style": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Screen saver"),
+                    "type": "dropdown",
+                    "value": "standby",
+                    "options": [
+                        {"name": _("StandBy (clock / print progress)") + " " + _("(default)"), "value": "standby"},
+                        {"name": _("Black"), "value": "black"},
+                    ],
+                }
+            },
+            {
+                "standby_night_red": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("StandBy: red at night"),
+                    "tooltip": _("With the dark appearance StandBy is shown in dim red"),
+                    "type": "binary",
+                    "value": "True",
                 }
             },
             {

@@ -45,6 +45,7 @@ MAP = {
     "wifi_fair": ("wifi-low", "regular"), "wifi_weak": ("wifi-none", "regular"),
     "z-closer": ("arrows-in-line-vertical", "regular"), "z-farther": ("arrows-out-line-vertical", "regular"),
     "z-tilt": ("scales", "regular"),
+    "visible": ("eye", "regular"), "hidden": ("eye-slash", "regular"),
 }
 
 # Icons offered in the quick-macro icon picker (ks_includes/quick_macros.ICON_CHOICES)
