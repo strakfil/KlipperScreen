@@ -6,6 +6,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 
 from ks_includes.KlippyGtk import find_widget
+from ks_includes.quick_macros import MAX_QUICK, QuickMacros
 from ks_includes.widgets.heatergraph import HeaterGraph
 from ks_includes.widgets.keypad import Keypad
 from panels.menu import Panel as MenuPanel
@@ -25,6 +26,10 @@ class Panel(MenuPanel):
         )
         self.menu_scroll = self._gtk.ScrolledWindow()
         self.numpad_visible = False
+        # Right column (landscape): menu tiles + user-chosen quick macros
+        self.qm = QuickMacros(screen)
+        self.right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.quick_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
         logging.info("### Making MainMenu")
 
@@ -40,7 +45,9 @@ class Panel(MenuPanel):
             self.main_menu.attach(self.create_left_panel(), 0, 0, 1, 1)
             self.labels["menu"] = self.arrangeMenuItems(items, 2, True)
             self.menu_scroll.add(self.labels["menu"])
-            self.main_menu.attach(self.menu_scroll, 1, 0, 1, 1)
+            self.right_col.pack_start(self.menu_scroll, True, True, 0)
+            self.right_col.pack_start(self.quick_box, False, False, 0)
+            self.main_menu.attach(self.right_col, 1, 0, 1, 1)
         self.content.add(self.main_menu)
 
     def update_graph_visibility(self, force_hide=False):
@@ -76,6 +83,61 @@ class Panel(MenuPanel):
 
     def activate(self):
         self.update_graph_visibility()
+        self.build_quick_macros()
+
+    def build_quick_macros(self):
+        """Up to 4 pinned macros under the menu tiles; empty slot opens the Macros panel."""
+        if self._screen.vertical_mode:
+            return
+        for child in self.quick_box.get_children():
+            self.quick_box.remove(child)
+        try:
+            pinned = self.qm.order()
+        except Exception as e:  # printer not ready yet / no config: keep Home usable
+            logging.debug(f"Quick macros unavailable: {e}")
+            return
+        header = Gtk.Box()
+        title = Gtk.Label(label=_("QUICK MACROS"), halign=Gtk.Align.START, hexpand=True, xalign=0)
+        title.get_style_context().add_class("section-header")
+        edit = Gtk.Button(label=_("Edit"))
+        edit.get_style_context().add_class("plain")
+        edit.get_style_context().add_class("link")
+        edit.connect("clicked", self.open_macros)
+        header.add(title)
+        header.add(edit)
+        self.quick_box.add(header)
+
+        grid = Gtk.Grid(row_homogeneous=True, column_homogeneous=True)
+        size = self._gtk.font_size * 1.2
+        slots = pinned + [None] * (MAX_QUICK - len(pinned))
+        for i, macro in enumerate(slots[:MAX_QUICK]):
+            if macro is None and i > len(pinned):
+                break  # show only one "add" placeholder
+            if macro is None:
+                btn = Gtk.Button(label=_("Add macro"))
+                btn.set_image(self._gtk.Image("increase", size, size, role="label2"))
+                btn.get_style_context().add_class("quick-macro-add")
+                btn.connect("clicked", self.open_macros)
+            else:
+                btn = Gtk.Button(label=self.qm.display_name(macro))
+                btn.set_image(self._gtk.Image(self.qm.icon(macro), size, size, role="accent"))
+                btn.get_style_context().add_class("quick-macro")
+                btn.connect("clicked", self.run_quick_macro, macro)
+            btn.set_always_show_image(True)
+            btn.set_image_position(Gtk.PositionType.LEFT)
+            btn.set_hexpand(True)
+            lbl = find_widget(btn, Gtk.Label)
+            if lbl is not None:
+                lbl.set_ellipsize(3)  # Pango.EllipsizeMode.END: long names never stretch the grid
+            grid.attach(btn, i % 2, i // 2, 1, 1)
+        self.quick_box.add(grid)
+        self.quick_box.show_all()
+
+    def open_macros(self, widget=None):
+        self._screen.show_panel("gcode_macros", _("Macros"))
+
+    def run_quick_macro(self, widget, macro):
+        self.qm.run(macro, widget=widget)
 
     def deactivate(self):
         if self.graph_update is not None:
@@ -291,7 +353,7 @@ class Panel(MenuPanel):
             self.main_menu.attach(self.menu_scroll, 0, 3, 1, 2)
         else:
             self.main_menu.remove_column(1)
-            self.main_menu.attach(self.menu_scroll, 1, 0, 1, 1)
+            self.main_menu.attach(self.right_col, 1, 0, 1, 1)
         self.main_menu.show_all()
         self.numpad_visible = False
         self._screen.base_panel.set_control_sensitive(False, control="back")

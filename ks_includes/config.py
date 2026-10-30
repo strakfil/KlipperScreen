@@ -280,6 +280,8 @@ class KlipperScreenConfig:
                 strs = ("name", "icon", "panel", "method", "params", "enable", "confirm", "style")
             elif section.startswith("graph") or section.startswith("displayed_macros"):
                 bools = [f"{option}" for option in config[section]]
+            elif section.startswith("quick_macros"):
+                strs = [f"{option}" for option in config[section]]
             elif section.startswith("spoolman"):
                 numbers = ("sync_rate", "spool_low_limit")
                 bools = "hide_archived"
@@ -1026,6 +1028,13 @@ class KlipperScreenConfig:
                     if section not in save_config.sections():
                         save_config.add_section(section)
                     save_config.set(section, item, str(value))
+
+        # Quick macros (order, custom names, icons) are plain strings: always persist them as-is
+        for section in [i for i in self.config.sections() if i.startswith("quick_macros")]:
+            if section not in save_config.sections():
+                save_config.add_section(section)
+            for item in self.config.options(section):
+                save_config.set(section, item, self.config[section].get(item))
 
         save_output = self._build_config_string(save_config).split("\n")
         for i in range(len(save_output)):

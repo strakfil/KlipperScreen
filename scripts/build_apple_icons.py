@@ -47,6 +47,17 @@ MAP = {
     "z-tilt": ("scales", "regular"),
 }
 
+# Icons offered in the quick-macro icon picker (ks_includes/quick_macros.ICON_CHOICES)
+MACRO = {
+    "lightning": "lightning", "broom": "broom", "sparkle": "sparkle", "crosshair": "crosshair",
+    "house": "house", "arrows-vertical": "arrows-vertical", "thermometer": "thermometer-hot",
+    "fire": "fire", "snowflake": "snowflake", "timer": "timer", "fan": "fan", "wind": "wind",
+    "drop": "drop", "spool-in": "download-simple", "spool-out": "upload-simple",
+    "lightbulb": "lightbulb", "camera": "camera", "wrench": "wrench", "ruler": "ruler",
+    "magic-wand": "magic-wand", "play": "play", "stop": "stop", "power": "power", "bell": "bell",
+}
+MAP.update({f"macro-{k}": (v, "regular") for k, v in MACRO.items()})
+
 # Badged composites: base phosphor icon + small text/sign in the corner
 BADGED = {
     "home-x": (("house", "regular"), "X"), "home-y": (("house", "regular"), "Y"),

@@ -1213,3 +1213,72 @@ msgstr "Grafitová"
 
 msgid "Reduce motion"
 msgstr "Omezit pohyb"
+
+msgid "Run %s?"
+msgstr "Spustit %s?"
+
+msgid ""
+"A print is in progress. The macro may move the toolhead or change "
+"temperatures."
+msgstr "Právě probíhá tisk. Makro může pohnout hlavou nebo změnit teploty."
+
+msgid "Running: %s"
+msgstr "Spuštěno: %s"
+
+msgid "Edit"
+msgstr "Upravit"
+
+msgid "Done"
+msgstr "Hotovo"
+
+msgid "Remove from Home"
+msgstr "Odebrat z Domů"
+
+msgid "Add to Home"
+msgstr "Přidat na Domů"
+
+msgid "Rename / icon"
+msgstr "Název a ikona"
+
+msgid "ON HOME"
+msgstr "NA DOMŮ"
+
+msgid "No macros on Home yet. Tap Edit to add some."
+msgstr "Na Domů zatím nejsou žádná makra. Přidáte je přes Upravit."
+
+msgid "Home holds at most 4 macros. Remove one before adding another."
+msgstr ""
+"Na Domů se vejdou nejvýš 4 makra. Než přidáte další, některé odeberte."
+
+msgid "Use the arrows to change the order on Home."
+msgstr "Šipkami změníte pořadí na Domů."
+
+msgid "ADD MACRO"
+msgstr "PŘIDAT MAKRO"
+
+msgid "OTHER MACROS"
+msgstr "OSTATNÍ MAKRA"
+
+msgid "Home holds at most 4 macros"
+msgstr "Na Domů se vejdou nejvýš 4 makra"
+
+msgid "NAME"
+msgstr "NÁZEV"
+
+msgid "Macro in Klipper: %s"
+msgstr "Makro v Klipperu: %s"
+
+msgid "ICON"
+msgstr "IKONA"
+
+msgid "Reset to default"
+msgstr "Obnovit výchozí"
+
+msgid "QUICK MACROS"
+msgstr "RYCHLÁ MAKRA"
+
+msgid "Add macro"
+msgstr "Přidat makro"
+
+msgid "Run"
+msgstr "Spustit"
