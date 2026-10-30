@@ -35,6 +35,7 @@ class StandBy:
         self.tick_count = 0
         self.progress = 0.0
         self.night = False
+        self.done = False
 
         self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, vexpand=True,
                             halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
@@ -94,6 +95,11 @@ class StandBy:
     def _printing(self):
         return self.printer is not None and self.printer.state in ("printing", "paused")
 
+    def _finished(self):
+        """Last print completed (Klipper keeps 'complete' until the next print / file reset)."""
+        return (self.printer is not None and not self._printing()
+                and self.printer.get_stat("print_stats", "state") == "complete")
+
     def _progress_and_remaining(self):
         stat = self.printer.get_stat
         # Prefer the print status screen's estimate (slicer / filament / file, per settings)
@@ -122,6 +128,7 @@ class StandBy:
             clock = now.strftime("%H:%M") if use_24h else now.strftime("%I:%M").lstrip("0")
             self.clock.set_label(clock)
             self.date.set_label(self._date_text(now))
+            self.done = False
             if self._printing():
                 self.progress, remaining = self._progress_and_remaining()
                 paused = self.printer.state == "paused"
@@ -136,6 +143,16 @@ class StandBy:
                     self.eta.set_label(clock)
                 self.percent.set_label(f"{self.progress * 100:.0f} %")
                 self.ring.queue_draw()
+            elif self._finished():
+                self.done = True
+                self.progress = 1.0
+                self.state_label.set_label(_("Print finished"))
+                self.remaining.set_label(_("Done"))
+                name = self.printer.get_stat("print_stats", "filename") or ""
+                self.filename.set_label(name.rsplit("/", 1)[-1].rsplit(".", 1)[0])
+                self.eta.set_label(clock)
+                self.percent.set_label("✓")
+                self.ring.queue_draw()
             self._apply_mode()
             self.tick_count += 1
             if self.tick_count % 12 == 0:  # every minute: tiny shift against image retention
@@ -149,7 +166,7 @@ class StandBy:
         return True
 
     def _apply_mode(self):
-        printing = self._printing()
+        printing = self._printing() or self._finished()
         self.idle_box.set_visible(not printing)
         self.print_box.set_visible(printing)
         appearance = getattr(self.screen, "appearance", None)
@@ -167,7 +184,7 @@ class StandBy:
             track, fill = (1.0, 0.27, 0.23, 0.22), (1.0, 0.27, 0.23, 0.85)
         else:
             palette = self.screen.gtk.icon_palette or {}
-            acc = palette.get("accent", "#0A84FF")
+            acc = "#30D158" if self.done else palette.get("accent", "#0A84FF")
             fill = tuple(int(acc[i:i + 2], 16) / 255 for i in (1, 3, 5)) + (1,)
             track = (0.46, 0.46, 0.5, 0.3)
         ctx.set_line_width(line)

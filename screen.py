@@ -857,7 +857,23 @@ class KlipperScreen(Gtk.ApplicationWindow):
         if self.printer and self.printer.state in ("printing", "paused"):
             self.set_screenblanking_timeout(time)
 
+    def standby_enabled(self):
+        return self._config.get_main_config().get("screensaver_style", "standby") == "standby"
+
+    def reapply_blanking(self, *args):
+        """Settings callback: re-apply blanking / StandBy timers for the current state."""
+        if self.printer and self.printer.state in ("printing", "paused"):
+            self.set_screenblanking_timeout(self._config.get_main_config().get("screen_blanking_printing"))
+        else:
+            self.set_screenblanking_timeout(self._config.get_main_config().get("screen_blanking"))
+
     def set_screenblanking_timeout(self, time):
+        if self.standby_enabled():
+            # Two stages: StandBy after `standby_after` (screensaver timer), the display itself
+            # is switched off after `screen_off_after` - never while printing, so the progress
+            # stays visible.
+            printing = bool(self.printer and self.printer.state in ("printing", "paused"))
+            time = "off" if printing else self._config.get_main_config().get("screen_off_after", "3600")
         # disable screensaver we have our own
         if not self.wayland:
             cmd = ["xset", "-display", self.display_number, "s", "off"]
@@ -873,6 +889,8 @@ class KlipperScreen(Gtk.ApplicationWindow):
                 logging.exception(exc)
         if self.use_dpms and not self.wayland:
             self.set_dpms_timeout()
+            if self.standby_enabled():
+                self.screensaver.reset_timeout()  # StandBy timer runs alongside DPMS
         else:
             self.screensaver.reset_timeout()
         logging.debug(f"Blanking timeout: {time}")

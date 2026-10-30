@@ -23,10 +23,21 @@ class ScreenSaver:
     def is_showing(self):
         return self.blackbox is not None
 
+    def _standby_style(self):
+        return self.config.get_main_config().get("screensaver_style", "standby") == "standby"
+
     def reset_timeout(self, *args):
         if self.screensaver_timeout is not None:
             GLib.source_remove(self.screensaver_timeout)
             self.screensaver_timeout = None
+        if self._standby_style():
+            after = self.config.get_main_config().get("standby_after", "120")
+            if after != "off":
+                try:
+                    self.screensaver_timeout = GLib.timeout_add_seconds(max(int(after), 10), self.show)
+                except ValueError:
+                    logging.error(f"Invalid standby_after: {after}")
+            return
         if self.printer and self.printer.state in ("printing", "paused"):
             use_screensaver = self.config.get_main_config().get("screen_blanking_printing") != "off"
         else:
@@ -45,7 +56,7 @@ class ScreenSaver:
         if self.screensaver_timeout is not None:
             GLib.source_remove(self.screensaver_timeout)
             self.screensaver_timeout = None
-        if self.screen.blanking_time == 0:
+        if self.screen.blanking_time == 0 and not self._standby_style():
             return False
         self.screen.remove_keyboard()
         self.screen.close_popup_message()

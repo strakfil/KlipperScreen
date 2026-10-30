@@ -1360,3 +1360,17 @@ msgstr "Zbývá"
 
 msgid "Done at %s"
 msgstr "Hotovo v %s"
+
+msgid "StandBy after"
+msgstr "StandBy po"
+
+msgid "Turn display off after"
+msgstr "Vypnout displej po"
+
+msgid ""
+"Only when not printing; while printing StandBy stays on. Needs Screen DPMS."
+msgstr ""
+"Jen mimo tisk; během tisku StandBy zůstane zapnutý. Vyžaduje Obrazovka DPMS."
+
+msgid "Print finished"
+msgstr "Tisk dokončen"

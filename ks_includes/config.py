@@ -229,6 +229,8 @@ class KlipperScreenConfig:
                     "accent",
                     "action_bar_position",
                     "screensaver_style",
+                    "standby_after",
+                    "screen_off_after",
                     "light_from",
                     "dark_from",
                 )
@@ -445,9 +447,45 @@ class KlipperScreenConfig:
                     "name": _("Screen saver"),
                     "type": "dropdown",
                     "value": "standby",
+                    "callback": screen.reapply_blanking,
                     "options": [
                         {"name": _("StandBy (clock / print progress)") + " " + _("(default)"), "value": "standby"},
                         {"name": _("Black"), "value": "black"},
+                    ],
+                }
+            },
+            {
+                "standby_after": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("StandBy after"),
+                    "type": "dropdown",
+                    "value": "120",
+                    "callback": screen.reapply_blanking,
+                    "options": [
+                        {"name": "1 " + ngettext("minute", "minutes", 1), "value": "60"},
+                        {"name": "2 " + ngettext("minute", "minutes", 2) + " " + _("(default)"), "value": "120"},
+                        {"name": "5 " + ngettext("minute", "minutes", 5), "value": "300"},
+                        {"name": "10 " + ngettext("minute", "minutes", 10), "value": "600"},
+                        {"name": _("Never"), "value": "off"},
+                    ],
+                }
+            },
+            {
+                "screen_off_after": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Turn display off after"),
+                    "tooltip": _("Only when not printing; while printing StandBy stays on. Needs Screen DPMS."),
+                    "type": "dropdown",
+                    "value": "3600",
+                    "callback": screen.reapply_blanking,
+                    "options": [
+                        {"name": "15 " + ngettext("minute", "minutes", 15), "value": "900"},
+                        {"name": "30 " + ngettext("minute", "minutes", 30), "value": "1800"},
+                        {"name": "1 " + ngettext("hour", "hours", 1) + " " + _("(default)"), "value": "3600"},
+                        {"name": "2 " + ngettext("hour", "hours", 2), "value": "7200"},
+                        {"name": _("Never"), "value": "off"},
                     ],
                 }
             },
