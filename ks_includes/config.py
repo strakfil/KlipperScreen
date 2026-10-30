@@ -206,6 +206,7 @@ class KlipperScreenConfig:
                     "start_locked",
                     "keyboard_navigation",
                     "enable_addons",
+                    "reduce_motion",
                 )
                 strs = (
                     "default_printer",
@@ -223,6 +224,10 @@ class KlipperScreenConfig:
                     "side_shortcut_target",
                     "shutdown_action",
                     "reboot_action",
+                    "appearance",
+                    "accent",
+                    "light_from",
+                    "dark_from",
                 )
                 numbers = (
                     "job_complete_timeout",
@@ -234,6 +239,8 @@ class KlipperScreenConfig:
                     "height",
                     "autolock_timeout",
                     "screensaver_wake_delay",
+                    "latitude",
+                    "longitude",
                 )
             elif section.startswith("printer "):
                 bools = (
@@ -346,6 +353,77 @@ class KlipperScreenConfig:
                     "value": "z-bolt",
                     "callback": screen.change_theme,
                     "options": [{"name": "Z-bolt" + " " + _("(default)"), "value": "z-bolt"}],
+                }
+            },
+            {
+                "appearance": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Appearance"),
+                    "type": "dropdown",
+                    "tooltip": _("Apple theme: light, dark or automatic switching"),
+                    "value": "auto",
+                    "callback": screen.reconfigure_appearance,
+                    "options": [
+                        {"name": _("Light"), "value": "light"},
+                        {"name": _("Dark"), "value": "dark"},
+                        {"name": _("Automatic (sunrise / sunset)") + " " + _("(default)"), "value": "auto"},
+                        {"name": _("Custom schedule"), "value": "schedule"},
+                    ],
+                }
+            },
+            {
+                "light_from": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Light from"),
+                    "type": "dropdown",
+                    "tooltip": _("Used by the custom schedule"),
+                    "value": "07:00",
+                    "callback": screen.reconfigure_appearance,
+                    "options": [{"name": "00:00", "value": "00:00"}, {"name": "00:30", "value": "00:30"}, {"name": "01:00", "value": "01:00"}, {"name": "01:30", "value": "01:30"}, {"name": "02:00", "value": "02:00"}, {"name": "02:30", "value": "02:30"}, {"name": "03:00", "value": "03:00"}, {"name": "03:30", "value": "03:30"}, {"name": "04:00", "value": "04:00"}, {"name": "04:30", "value": "04:30"}, {"name": "05:00", "value": "05:00"}, {"name": "05:30", "value": "05:30"}, {"name": "06:00", "value": "06:00"}, {"name": "06:30", "value": "06:30"}, {"name": "07:00", "value": "07:00"}, {"name": "07:30", "value": "07:30"}, {"name": "08:00", "value": "08:00"}, {"name": "08:30", "value": "08:30"}, {"name": "09:00", "value": "09:00"}, {"name": "09:30", "value": "09:30"}, {"name": "10:00", "value": "10:00"}, {"name": "10:30", "value": "10:30"}, {"name": "11:00", "value": "11:00"}, {"name": "11:30", "value": "11:30"}, {"name": "12:00", "value": "12:00"}, {"name": "12:30", "value": "12:30"}, {"name": "13:00", "value": "13:00"}, {"name": "13:30", "value": "13:30"}, {"name": "14:00", "value": "14:00"}, {"name": "14:30", "value": "14:30"}, {"name": "15:00", "value": "15:00"}, {"name": "15:30", "value": "15:30"}, {"name": "16:00", "value": "16:00"}, {"name": "16:30", "value": "16:30"}, {"name": "17:00", "value": "17:00"}, {"name": "17:30", "value": "17:30"}, {"name": "18:00", "value": "18:00"}, {"name": "18:30", "value": "18:30"}, {"name": "19:00", "value": "19:00"}, {"name": "19:30", "value": "19:30"}, {"name": "20:00", "value": "20:00"}, {"name": "20:30", "value": "20:30"}, {"name": "21:00", "value": "21:00"}, {"name": "21:30", "value": "21:30"}, {"name": "22:00", "value": "22:00"}, {"name": "22:30", "value": "22:30"}, {"name": "23:00", "value": "23:00"}, {"name": "23:30", "value": "23:30"}],
+                }
+            },
+            {
+                "dark_from": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Dark from"),
+                    "type": "dropdown",
+                    "tooltip": _("Used by the custom schedule"),
+                    "value": "19:00",
+                    "callback": screen.reconfigure_appearance,
+                    "options": [{"name": "00:00", "value": "00:00"}, {"name": "00:30", "value": "00:30"}, {"name": "01:00", "value": "01:00"}, {"name": "01:30", "value": "01:30"}, {"name": "02:00", "value": "02:00"}, {"name": "02:30", "value": "02:30"}, {"name": "03:00", "value": "03:00"}, {"name": "03:30", "value": "03:30"}, {"name": "04:00", "value": "04:00"}, {"name": "04:30", "value": "04:30"}, {"name": "05:00", "value": "05:00"}, {"name": "05:30", "value": "05:30"}, {"name": "06:00", "value": "06:00"}, {"name": "06:30", "value": "06:30"}, {"name": "07:00", "value": "07:00"}, {"name": "07:30", "value": "07:30"}, {"name": "08:00", "value": "08:00"}, {"name": "08:30", "value": "08:30"}, {"name": "09:00", "value": "09:00"}, {"name": "09:30", "value": "09:30"}, {"name": "10:00", "value": "10:00"}, {"name": "10:30", "value": "10:30"}, {"name": "11:00", "value": "11:00"}, {"name": "11:30", "value": "11:30"}, {"name": "12:00", "value": "12:00"}, {"name": "12:30", "value": "12:30"}, {"name": "13:00", "value": "13:00"}, {"name": "13:30", "value": "13:30"}, {"name": "14:00", "value": "14:00"}, {"name": "14:30", "value": "14:30"}, {"name": "15:00", "value": "15:00"}, {"name": "15:30", "value": "15:30"}, {"name": "16:00", "value": "16:00"}, {"name": "16:30", "value": "16:30"}, {"name": "17:00", "value": "17:00"}, {"name": "17:30", "value": "17:30"}, {"name": "18:00", "value": "18:00"}, {"name": "18:30", "value": "18:30"}, {"name": "19:00", "value": "19:00"}, {"name": "19:30", "value": "19:30"}, {"name": "20:00", "value": "20:00"}, {"name": "20:30", "value": "20:30"}, {"name": "21:00", "value": "21:00"}, {"name": "21:30", "value": "21:30"}, {"name": "22:00", "value": "22:00"}, {"name": "22:30", "value": "22:30"}, {"name": "23:00", "value": "23:00"}, {"name": "23:30", "value": "23:30"}],
+                }
+            },
+            {
+                "accent": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Accent colour"),
+                    "type": "dropdown",
+                    "value": "blue",
+                    "callback": screen.reconfigure_appearance,
+                    "options": [
+                        {"name": _("Blue") + " " + _("(default)"), "value": "blue"},
+                        {"name": _("Purple"), "value": "purple"},
+                        {"name": _("Pink"), "value": "pink"},
+                        {"name": _("Red"), "value": "red"},
+                        {"name": _("Orange"), "value": "orange"},
+                        {"name": _("Yellow"), "value": "yellow"},
+                        {"name": _("Green"), "value": "green"},
+                        {"name": _("Graphite"), "value": "graphite"},
+                    ],
+                }
+            },
+            {
+                "reduce_motion": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Reduce motion"),
+                    "type": "binary",
+                    "value": "False",
+                    "callback": screen.reconfigure_appearance,
                 }
             },
             {

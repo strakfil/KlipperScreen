@@ -45,6 +45,7 @@ class KlippyGtk:
         self._http_pixbuf_cache = OrderedDict()
         self._http_pixbuf_cache_lock = threading.Lock()
         self._http_pixbuf_cache_max = 500
+        self.icon_palette = None
         self.themedir = os.path.join(
             pathlib.Path(__file__).parent.resolve().parent, "styles", screen.theme, "images"
         )
@@ -133,32 +134,83 @@ class KlippyGtk:
         for key in self.color_list:
             self.color_list[key]["state"] = 0
 
-    def Image(self, image_name=None, width=None, height=None):
+    def Image(self, image_name=None, width=None, height=None, role=None):
+        """role: palette token for the glyph colour (label, label2, accent, on_accent, red...).
+        Only used by themes with a dynamic palette (styles/apple)."""
         if image_name is None:
             return Gtk.Image()
-        pixbuf = self.PixbufFromIcon(image_name, width, height)
-        return Gtk.Image.new_from_pixbuf(pixbuf) if pixbuf is not None else Gtk.Image()
+        pixbuf = self.PixbufFromIcon(image_name, width, height, role)
+        image = Gtk.Image.new_from_pixbuf(pixbuf) if pixbuf is not None else Gtk.Image()
+        if self.icon_palette is not None:
+            # Setting a Python attribute keeps the PyGObject wrapper alive with the widget,
+            # so refresh_icons() can find and recolour it after a light/dark switch.
+            image._ks_icon = (image_name, width, height, role)
+        return image
+
+    def set_icon_palette(self, palette):
+        self.icon_palette = palette
+
+    def refresh_icons(self, roots):
+        """Re-render every themed icon below the given widgets with the current palette."""
+        def walk(widget):
+            meta = getattr(widget, "_ks_icon", None)
+            if meta is not None and isinstance(widget, Gtk.Image):
+                pixbuf = self.PixbufFromIcon(*meta)
+                if pixbuf is not None:
+                    widget.set_from_pixbuf(pixbuf)
+            if isinstance(widget, Gtk.Container):
+                widget.forall(walk)
+        for root in roots:
+            walk(root)
 
     def update_themedir(self, theme):
         self.themedir = os.path.join(
             pathlib.Path(__file__).parent.resolve().parent, "styles", theme, "images"
         )
 
-    def PixbufFromIcon(self, filename, width=None, height=None):
+    def PixbufFromIcon(self, filename, width=None, height=None, role=None):
         width = width if width is not None else self.img_width
         height = height if height is not None else self.img_height
-        return self._PixbufFromIcon(filename, self.themedir, int(width), int(height))
+        color = None
+        if self.icon_palette is not None:
+            color = self.icon_palette.get(role or "label", self.icon_palette["label"])
+        return self._PixbufFromIcon(filename, self.themedir, int(width), int(height), color)
 
     @staticmethod
-    @lru_cache(maxsize=500)
-    def _PixbufFromIcon(filename, themedir, width, height):
+    @lru_cache(maxsize=800)
+    def _PixbufFromIcon(filename, themedir, width, height, color=None):
         filename = os.path.join(themedir, filename)
         for ext in ["svg", "png"]:
             file = f"{filename}.{ext}"
-            pixbuf = KlippyGtk.PixbufFromFile(file, width, height) if os.path.exists(file) else None
+            if not os.path.exists(file):
+                continue
+            if color is not None and ext == "svg":
+                pixbuf = KlippyGtk.PixbufFromSvgColored(file, width, height, color)
+            else:
+                pixbuf = KlippyGtk.PixbufFromFile(file, width, height)
             if pixbuf is not None:
                 return pixbuf
         return None
+
+    @staticmethod
+    def PixbufFromSvgColored(filename, width, height, color):
+        """Render an SVG whose glyph uses `currentColor`, keeping its aspect ratio."""
+        try:
+            data = pathlib.Path(filename).read_text().replace("currentColor", color)
+            loader = GdkPixbuf.PixbufLoader.new_with_type("svg")
+
+            def fit(ldr, w, h):
+                scale = min(width / w, height / h)
+                ldr.set_size(max(1, round(w * scale)), max(1, round(h * scale)))
+
+            loader.connect("size-prepared", fit)
+            loader.write(data.encode())
+            loader.close()
+            return loader.get_pixbuf()
+        except Exception as e:
+            logging.exception(e)
+            logging.error(f"Unable to render icon {filename}")
+            return None
 
     @staticmethod
     @lru_cache(maxsize=500)

@@ -24,6 +24,7 @@ from gi.repository import Gdk, GLib, Gtk, Pango
 from jinja2 import Environment
 
 from ks_includes import functions
+from ks_includes.appearance import AppearanceScheduler, palette, palette_css, strip_motion
 from ks_includes.config import KlipperScreenConfig
 from ks_includes.files import KlippyFiles
 from ks_includes.KlippyGtk import KlippyGtk
@@ -155,8 +156,12 @@ class KlipperScreen(Gtk.ApplicationWindow):
         self.base_css = ""
         self.load_base_styles()
         self.set_icon_from_file(os.path.join(klipperscreendir, "styles", "icon.svg"))
+        self.dynamic_palette = False
+        self.theme_css = ""
+        self.appearance = AppearanceScheduler(self._appearance_conf(), self._apply_appearance)
         self.base_panel = BasePanel(self)
         self.change_theme(self.theme)
+        self.appearance.start()
         self.overlay = Gtk.Overlay()
         self.add(self.overlay)
         self.overlay.add_overlay(self.base_panel.main_grid)
@@ -633,9 +638,44 @@ class KlipperScreen(Gtk.ApplicationWindow):
                 css_data += f"\n{class_name} {{ border-left-color: #{color} }}"
         return css_data
 
+    # ---------- Automatic appearance (light / dark / auto / schedule) ----------
+    def _appearance_conf(self):
+        main = self._config.get_main_config()
+        return {k: main.get(k) for k in ("appearance", "latitude", "longitude", "light_from", "dark_from")
+                if main.get(k, None) is not None}
+
+    def current_palette(self):
+        variant = self.appearance.current or self.appearance.desired()[0]
+        return variant, palette(variant, self._config.get_main_config().get("accent", "blue"))
+
+    def _apply_appearance(self, variant):
+        if not self.dynamic_palette:
+            return
+        logging.info(f"Appearance -> {variant}")
+        self.gtk.set_icon_palette(self.current_palette()[1])
+        self.update_style_provider(self.theme_css)
+        roots = [self] + [p.content for p in self.panels.values() if hasattr(p, "content")]
+        self.gtk.refresh_icons(roots)
+
+    def reconfigure_appearance(self, *args):
+        """Settings callback: mode, schedule or accent changed."""
+        self.appearance.configure(self._appearance_conf())
+        self.appearance.current = None  # force a re-apply even if the variant stays the same
+        self.appearance.tick()
+
+    def toggle_appearance(self, *args):
+        """Quick light/dark flip; in automatic mode it holds until the next transition."""
+        return self.appearance.toggle()
+
     def update_style_provider(self, theme_css):
         css_data = self.customize_graph_colors(theme_css)
+        if self.dynamic_palette:
+            variant = self.appearance.current or self.appearance.desired()[0]
+            accent = self._config.get_main_config().get("accent", "blue")
+            css_data = palette_css(variant, accent) + css_data
         css_data = self.base_css + css_data
+        if self.dynamic_palette and self._config.get_main_config().getboolean("reduce_motion", fallback=False):
+            css_data = strip_motion(css_data)
         screen = Gdk.Screen.get_default()
         if self.style_provider:
             Gtk.StyleContext.remove_provider_for_screen(screen, self.style_provider)
@@ -650,8 +690,11 @@ class KlipperScreen(Gtk.ApplicationWindow):
             theme_name = self._config.get_main_config().get("theme")
         self.gtk.update_themedir(theme_name)
         theme_css, theme_options = self.load_custom_theme(theme_name)
+        self.dynamic_palette = bool(theme_options.pop("dynamic_palette", False))
         self.style_options.update(theme_options)
         self.gtk.color_list = self.style_options["graph_colors"]
+        self.theme_css = theme_css
+        self.gtk.set_icon_palette(self.current_palette()[1] if self.dynamic_palette else None)
         self.update_style_provider(theme_css)
         self.reload_icon_theme()
 

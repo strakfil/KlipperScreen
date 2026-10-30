@@ -1,0 +1,292 @@
+/* Apple-native theme for KlipperScreen
+ * Colours are NOT defined here: screen.py prepends a @define-color block from
+ * ks_includes/appearance.py (light/dark variant + chosen accent), so switching
+ * appearance never rebuilds panels.
+ * Spacing scale (1em = KlipperScreen font size, ~17.8 px on 800x480):
+ *   .25em 4px · .5em 9px · .75em 13px · 1em 18px
+ * Radii: controls .65em (~12px) · cards 1em (~18px) · sheets 1.25em (~22px)
+ */
+
+* {
+    color: @label;
+    font-family: "Inter", "SF Pro Text", "Helvetica Neue", sans-serif;
+    -gtk-icon-shadow: none;
+}
+
+window,
+list row,
+treeview.view,
+junction,
+.content {
+    background-color: @bg;
+}
+
+label { color: @label; }
+separator { background-color: @sep; min-height: 1px; min-width: 1px; }
+
+/* ---------- Buttons ---------------------------------------------------- */
+button {
+    background-color: @bg2;
+    border: 0;
+    border-radius: 1em;
+    margin: .3em;
+    padding: .5em;
+    transition: background-color 120ms ease-out;
+}
+button:active,
+button.active,
+button:checked {
+    background-color: @fill_pressed;
+}
+button:disabled { opacity: .4; }
+button:focus { outline: 2px solid @accent; outline-offset: 2px; }
+
+/* main-menu tiles: no coloured underline, content-first */
+button.color1, button.color2, button.color3, button.color4 {
+    border: 0;
+    background-color: @bg2;
+    border-radius: 1em;
+}
+button.color1:active, button.color2:active,
+button.color3:active, button.color4:active {
+    background-color: @fill_pressed;
+}
+button.color4:disabled label { color: @label3; }
+
+/* semantic button roles used by the fork's panels */
+button.primary { background-color: @accent; }
+button.primary label, button.primary image { color: @on_accent; }
+button.primary:active { background-color: shade(@accent, 0.85); }
+button.tinted { background-color: @accent_tint; }
+button.tinted label { color: @accent; font-weight: 600; }
+button.destructive { background-color: @red_tint; }
+button.destructive label { color: @red; font-weight: 600; }
+button.plain { background-color: transparent; }
+button.plain label { color: @accent; }
+
+button.update { background-color: @green_tint; border: 0; border-radius: .65em; }
+button.invalid { background-color: @red_tint; border: 0; border-radius: .65em; }
+button.file-list { border-radius: .65em; }
+button.status { background-color: transparent; }
+
+/* ---------- Title bar & action bar (sidebar) --------------------------- */
+.title_bar {
+    background-color: @bg;
+    min-height: 2em;
+    padding: 0 .75em;
+}
+.title_bar label { font-weight: 700; }
+
+.action_bar {
+    background-color: @bg;
+    border-right: 1px solid @sep;
+}
+.action_bar button {
+    background-color: transparent;
+    border-radius: .9em;
+    margin: .25em .4em;
+}
+.action_bar button:active { background-color: @fill; }
+.action_bar button.selected { background-color: @accent_tint; }
+.action_bar button.estop { background-color: @red_tint; }
+.action_bar :disabled { opacity: .35; }
+
+/* ---------- Lists & grouped sections ----------------------------------- */
+.frame-item,
+.updater-item {
+    background-color: @bg2;
+    border-radius: .8em;
+    padding: .5em .75em;
+    margin: .15em .5em;
+}
+.heater-grid button {
+    background-color: @bg2;
+    border-radius: .8em;
+    margin: .2em;
+    padding: 0 .75em;
+    min-height: 2.9em;
+}
+.heater-grid label { font-weight: 600; }
+.graph_label { background-color: transparent; }
+.section-header { color: @label2; font-size: .75em; font-weight: 600; margin: .5em .75em .25em .75em; }
+.secondary, textview .time { color: @label2; }
+
+/* ---------- Segmented control (horizontal toggle buttons) -------------- */
+.horizontal_togglebuttons,
+.horizontal_togglebuttons_smaller {
+    background-color: @fill;
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: .2em;
+}
+.horizontal_togglebuttons:first-child,
+.horizontal_togglebuttons_smaller:first-child { border-radius: .65em 0 0 .65em; }
+.horizontal_togglebuttons:last-child,
+.horizontal_togglebuttons_smaller:last-child { border-radius: 0 .65em .65em 0; }
+.horizontal_togglebuttons_active {
+    background-color: @key;
+    border-radius: .5em;
+    box-shadow: 0 1px 3px @shadow;
+}
+.horizontal_togglebuttons_active label { font-weight: 600; }
+
+/* ---------- Switches, sliders, progress -------------------------------- */
+switch {
+    background-color: @fill;
+    border: 0;
+    border-radius: 999px;
+    min-width: 3.1em;
+    min-height: 1.85em;
+    margin: .5em;
+    transition: background-color 200ms ease-out;
+}
+switch:checked { background-color: @green; }
+switch slider {
+    background-color: #FFFFFF;
+    border: 0;
+    border-radius: 999px;
+    min-width: 1.6em;
+    min-height: 1.6em;
+    margin: .12em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+switch image { color: transparent; }
+
+trough {
+    background-color: @fill;
+    border: 0;
+    border-radius: 999px;
+    min-height: .45em;
+    margin: .9em .5em;
+}
+trough highlight,
+trough progress {
+    background-color: @accent;
+    border: 0;
+    border-radius: 999px;
+    min-height: .45em;
+}
+scale slider {
+    background-color: #FFFFFF;
+    border: 0;
+    border-radius: 999px;
+    min-width: 1.6em;
+    min-height: 1.6em;
+    margin: -.6em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+scale mark { color: @label2; }
+.fan_slider { color: @label; }
+progressbar trough, progressbar progress { min-height: .45em; }
+
+treeview.view check { background-color: @fill; border-radius: 999px; }
+treeview.view check:checked {
+    background-color: @accent;
+    -gtk-icon-source: url("./styles/apple/images/complete.svg");
+}
+
+/* ---------- Entry, combobox, menus, popovers --------------------------- */
+entry {
+    background-color: @fill;
+    border: 0;
+    border-radius: .65em;
+    padding: .4em .75em;
+    caret-color: @accent;
+}
+combobox button { background-color: @fill; border-radius: .65em; }
+menu, menuitem, combobox window.popup, popover {
+    background-color: @bg3;
+    border: 0;
+    border-radius: .9em;
+}
+menuitem:hover { background-color: @fill; }
+popover button { background-color: transparent; }
+
+scrollbar, scrollbar trough { background-color: transparent; border: 0; margin: 0; }
+scrollbar slider {
+    background-color: @fill_pressed;
+    border-radius: 999px;
+    min-width: .3em;
+    border: 0;
+}
+
+/* ---------- Dialogs (alerts / sheets) ---------------------------------- */
+.dialog {
+    background-color: @bg2;
+    border: 0;
+    border-radius: 1.25em;
+    padding: .75em 1.5em;
+    margin: 1em;
+    box-shadow: 0 8px 40px @shadow;
+}
+.dialog button {
+    background-color: @fill;
+    border: 0;
+    border-radius: .8em;
+    padding: 1em .2em;
+    margin-top: .75em;
+}
+.dialog button label { font-weight: 600; }
+.dialog-error { background-color: @red_tint; }
+.dialog-error label { color: @red; }
+.dialog-warning { background-color: @orange_tint; }
+.dialog-warning label { color: @orange; }
+.dialog-info, .dialog-primary { background-color: @accent; }
+.dialog-info label, .dialog-primary label { color: @on_accent; }
+.dialog-default, .dialog-secondary { background-color: @fill; }
+
+/* ---------- Banners (message popups) ----------------------------------- */
+.message_popup {
+    background-color: @bg3;
+    border: 0;
+    border-radius: 1em;
+    padding: .75em 1em;
+    margin: .5em;
+    box-shadow: 0 4px 24px @shadow;
+}
+.message_popup_echo { background-color: @bg3; }
+.message_popup_warning { background-color: @orange_tint; }
+.message_popup_error { background-color: @red_tint; }
+.message_popup button,
+.message_popup_echo button,
+.message_popup_warning button,
+.message_popup_error button { background-color: transparent; }
+.message { background-color: @red_tint; border: 0; border-radius: 1em; }
+.message label { color: @red; }
+.message button { background-color: @red; }
+.message button label { color: #FFFFFF; }
+.warning { background-color: @orange_tint; }
+.error { background-color: @red_tint; }
+
+/* ---------- Numpad & keyboard ------------------------------------------ */
+.numpad_key,
+.numpad_tleft, .numpad_top, .numpad_tright,
+.numpad_left, .numpad_button, .numpad_right,
+.numpad_bleft, .numpad_bottom, .numpad_bright {
+    background-color: @key;
+    border: 0;
+    border-radius: .65em;
+    margin: .2em;
+}
+.numpad_key label { font-size: 1.3em; font-weight: 500; }
+.keyboard_pad { background-color: @bg2; }
+.keyboard_pad button { background-color: @key; border-radius: .5em; }
+
+/* ---------- Printing ---------------------------------------------------- */
+.printing-filename { font-weight: 600; }
+.printing-status, .printing-status-label { color: @label; }
+.printing-progress-text { font-weight: 700; }
+.printing-info-secondary label { color: @label2; }
+.printing-thumbnail { background-color: @bg2; border-radius: 1em; }
+
+/* ---------- Misc --------------------------------------------------------- */
+.filament_sensor_detected label { color: @green; }
+.filament_sensor_empty label { color: @red; }
+.endstop-open { color: @green; }
+.endstop-triggered { color: @red; }
+.spoolman_low { color: @orange; }
+.lockscreen_entry { background-color: @fill; border-radius: .65em; }
+.lockscreen_button { background-color: @accent; border-radius: .65em; }
+textview text { background-color: @bg2; color: @label; }
+spinner { color: @accent; }
