@@ -341,3 +341,31 @@ button.run-button {
     min-height: 3.1em;
 }
 button.run-button:active { background-color: @fill_pressed; }
+
+/* ---------- Home ---------------------------------------------------------- */
+button.home-tile {
+    background-color: @bg2;
+    border-radius: 1em;
+    margin: .3em;
+    padding: .4em .9em;
+}
+button.home-tile label { font-weight: 600; font-size: 1.05em; }
+button.home-tile-primary { background-color: @accent_tint; }
+button.home-tile-primary label { color: @accent; }
+button.home-tile:active { background-color: @fill_pressed; }
+
+/* heater list: name + value read as one grouped row */
+.heater-grid button { border-radius: 0; margin: 0 0 1px 0; background-color: @bg2; }
+.heater-grid button.graph_label { border-left-width: .25em; border-left-style: solid; }
+.heater-grid label { font-weight: 600; }
+
+/* action bar: E-stop always reads as destructive */
+.action_bar button#emergency { background-color: @red_tint; }
+.action_bar button#emergency:active { background-color: @red; }
+.title_bar label { font-size: 1em; }
+
+/* ---------- Print status ---------------------------------------------------- */
+button.tinted.color1, button.tinted.color2, button.tinted.color3, button.tinted.color4 { background-color: @accent_tint; }
+button.destructive.color1, button.destructive.color2, button.destructive.color3, button.destructive.color4 { background-color: @red_tint; }
+button.tinted:active, button.destructive:active { background-color: @fill_pressed; }
+.printing-info button, .printing-info-secondary button { background-color: transparent; }

@@ -32,7 +32,7 @@ MAP = {
     "fine-tune": ("sliders-horizontal", "regular"), "hashtag": ("hash", "regular"),
     "heat-up": ("fire", "regular"), "heater": ("thermometer", "regular"), "home": ("house", "regular"),
     "hourglass": ("hourglass", "regular"), "info": ("info", "regular"), "klipper": ("cube", "regular"),
-    "light": ("lightbulb", "regular"), "load": ("download-simple", "regular"), "lock": ("lock", "regular"),
+    "light": ("lightbulb", "regular"), "load": ("caret-right", "bold"), "lock": ("lock", "regular"),
     "main": ("squares-four", "regular"), "motor-off": ("engine", "regular"),
     "move": ("arrows-out-cardinal", "regular"), "network": ("network", "regular"),
     "notifications": ("bell", "regular"), "notifications_active": ("bell-ringing", "regular"),

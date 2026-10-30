@@ -118,7 +118,7 @@ class KlippyFiles:
         return ["file", thumb["path"]] if thumb["local"] else ["http", thumb["path"]]
 
     def has_thumbnail(self, filename):
-        return filename in self.files and "thumbnails" in self.files[filename]
+        return filename in self.files and bool(self.files[filename].get("thumbnails"))
 
     def request_metadata(self, filename):
         if self.is_gcode(filename):

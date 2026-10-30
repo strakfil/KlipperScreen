@@ -1282,3 +1282,18 @@ msgstr "Přidat makro"
 
 msgid "Run"
 msgstr "Spustit"
+
+msgid "Nozzle"
+msgstr "Tryska"
+
+msgid "Bed"
+msgstr "Podložka"
+
+msgid "Behaviour"
+msgstr "Chování"
+
+msgid "Display"
+msgstr "Displej"
+
+msgid "Others"
+msgstr "Ostatní"

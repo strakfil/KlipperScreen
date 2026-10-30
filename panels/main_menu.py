@@ -49,6 +49,30 @@ class Panel(MenuPanel):
             self.right_col.pack_start(self.quick_box, False, False, 0)
             self.main_menu.attach(self.right_col, 1, 0, 1, 1)
         self.content.add(self.main_menu)
+        self.style_home_tiles()
+
+    def style_home_tiles(self):
+        """Compact horizontal tiles (icon left, label right); Print is the primary action."""
+        if self._screen.vertical_mode:
+            return
+        for key, widget in self.labels.items():
+            if not isinstance(widget, Gtk.Button) or key in ("da",):
+                continue
+            ctx = widget.get_style_context()
+            if not any(ctx.has_class(f"color{i}") for i in range(1, 5)):
+                continue
+            widget.set_image_position(Gtk.PositionType.LEFT)
+            ctx.add_class("home-tile")
+            if key in ("print", "gcodes"):
+                ctx.add_class("home-tile-primary")
+                image = widget.get_image()
+                pixbuf = image.get_pixbuf() if image is not None else None
+                if pixbuf is not None and widget.get_name():
+                    size = pixbuf.get_width()
+                    widget.set_image(self._gtk.Image(widget.get_name(), size, size, role="accent"))
+            label = find_widget(widget, Gtk.Label)
+            if label is not None:
+                label.set_xalign(0)
 
     def update_graph_visibility(self, force_hide=False):
         if self.left_panel is None:
@@ -165,9 +189,11 @@ class Panel(MenuPanel):
                 image = "extruder"
             class_name = f"graph_label_{device}"
             dev_type = "extruder"
+            if self._printer.extrudercount == 1:
+                devname = _("Nozzle")
         elif device == "heater_bed":
             image = "bed"
-            devname = "Heater Bed"
+            devname = _("Bed")
             class_name = "graph_label_heater_bed"
             dev_type = "bed"
         elif device.startswith("heater_generic"):

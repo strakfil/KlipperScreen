@@ -368,14 +368,29 @@ class Panel(ScreenPanel):
         h = da.get_allocated_height()
         r = min(w, h) * 0.42
 
-        ctx.set_source_rgb(0.13, 0.13, 0.13)
+        track, fill = (0.13, 0.13, 0.13, 1), (0.718, 0.110, 0.110, 1)
+        palette = self._gtk.icon_palette
+        if palette is not None:  # Apple theme: system fill track + accent progress, round caps
+            track, fill = self._rgba(palette["fill"]), self._rgba(palette["accent"])
+            ctx.set_line_cap(1)  # cairo.LINE_CAP_ROUND
+        ctx.set_source_rgba(*track)
         ctx.set_line_width(self._gtk.font_size * 0.75)
         ctx.translate(w / 2, h / 2)
         ctx.arc(0, 0, r, 0, 2 * pi)
         ctx.stroke()
-        ctx.set_source_rgb(0.718, 0.110, 0.110)
-        ctx.arc(0, 0, r, 3 / 2 * pi, 3 / 2 * pi + (self.progress * 2 * pi))
-        ctx.stroke()
+        if self.progress > 0:
+            ctx.set_source_rgba(*fill)
+            ctx.arc(0, 0, r, 3 / 2 * pi, 3 / 2 * pi + (self.progress * 2 * pi))
+            ctx.stroke()
+
+    @staticmethod
+    def _rgba(value):
+        """'#RRGGBB' or 'rgba(r,g,b,a)' -> cairo floats."""
+        value = value.strip()
+        if value.startswith("#"):
+            return tuple(int(value[i:i + 2], 16) / 255 for i in (1, 3, 5)) + (1,)
+        parts = [float(x) for x in value[value.index("(") + 1:value.index(")")].split(",")]
+        return tuple(x / 255 for x in parts[:3]) + (parts[3] if len(parts) > 3 else 1,)
 
     def activate(self):
         if self.flow_timeout is None:
@@ -409,6 +424,17 @@ class Panel(ScreenPanel):
                 "home-z", _("Save Z") + "\n" + "Endstop", "color2"
             ),
         }
+        if self._gtk.icon_palette is not None:
+            # Apple theme: Pause/Resume = tinted accent, Cancel = destructive (red)
+            for key, (role, css) in {"pause": ("accent", "tinted"), "resume": ("accent", "tinted"),
+                                     "cancel": ("red", "destructive")}.items():
+                btn = self.buttons[key]
+                image = btn.get_image()
+                pixbuf = image.get_pixbuf() if image is not None else None
+                if pixbuf is not None:
+                    size = pixbuf.get_width()
+                    btn.set_image(self._gtk.Image(btn.get_name(), size, size, role=role))
+                btn.get_style_context().add_class(css)
         self.buttons["cancel"].connect("clicked", self.cancel)
         self.buttons["control"].connect("clicked", self._screen._go_to_submenu, "")
         self.buttons["fine_tune"].connect("clicked", self.menu_item_clicked, {"panel": "fine_tune"})

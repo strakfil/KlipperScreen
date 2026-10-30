@@ -334,9 +334,11 @@ class Panel(ScreenPanel):
                 image = "extruder"
             class_name = f"graph_label_{device}"
             dev_type = "extruder"
+            if self._printer.extrudercount == 1:
+                devname = _("Nozzle")
         elif device == "heater_bed":
             image = "bed"
-            devname = "Heater Bed"
+            devname = _("Bed")
             class_name = "graph_label_heater_bed"
             dev_type = "bed"
         elif device.startswith("heater_generic"):
