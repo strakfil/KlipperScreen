@@ -143,7 +143,10 @@ class BasePanel(ScreenPanel):
 
     def _reconfigure_main_grid(self):
         self.main_grid.remove(self.titlebar)
-        if self.content_wrap is not None and self.content_wrap.get_parent() is self.main_grid:
+        if getattr(self, "content_overlay", None) is not None and \
+                self.content_overlay.get_parent() is self.main_grid:
+            self.main_grid.remove(self.content_overlay)  # content stays inside the overlay
+        elif self.content_wrap is not None and self.content_wrap.get_parent() is self.main_grid:
             self.main_grid.remove(self.content_wrap)
             self.content_wrap.remove(self.content_wrap.get_child())  # viewport holding content
             self.content_wrap = None
@@ -204,18 +207,23 @@ class BasePanel(ScreenPanel):
         self.titlebar.pack_end(self.control["battery_box"], False, False, 0)
         self.titlebar.pack_end(self.control["item_box"], False, False, 0)
 
-        # Edge swipe from the left = Back (like iOS). Captured on the window so it works
-        # over any panel; it claims the touch only once it is clearly a horizontal swipe.
+        # Edge swipe from the left = Back (like iOS). The gesture lives ONLY on a thin
+        # invisible strip over the left edge of the content, so it can never interfere with
+        # touch scrolling or taps anywhere else (a window-wide capture gesture did).
         self._edge = {"active": False, "done": False}
-        self._edge_drag = Gtk.GestureDrag.new(self._screen)
-        self._edge_drag.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        self.edge_strip = Gtk.EventBox(halign=Gtk.Align.START, valign=Gtk.Align.FILL)
+        self.edge_strip.set_visible_window(False)
+        self.edge_strip.set_above_child(True)
+        self.edge_strip.set_size_request(max(int(self._gtk.font_size * 0.9), 14), -1)
+        self.edge_strip.get_style_context().add_class("edge-strip")
+        self.content_overlay = Gtk.Overlay()
+        self._edge_drag = Gtk.GestureDrag.new(self.edge_strip)
         self._edge_drag.connect("drag-begin", self._edge_begin)
         self._edge_drag.connect("drag-update", self._edge_update)
         self._edge_drag.connect("drag-end", self._edge_end)
 
     def _edge_begin(self, gesture, x, y):
-        self._edge = {"active": x <= self._gtk.font_size * 1.4 and y > self._gtk.titlebar_height,
-                      "done": False}
+        self._edge = {"active": True, "done": False}
 
     def _edge_update(self, gesture, dx, dy):
         if not self._edge["active"] or self._edge["done"]:
@@ -297,7 +305,14 @@ class BasePanel(ScreenPanel):
         ctx.add_class(f"action_bar_{position}")
         if not self._screen.vertical_mode and position == "top":
             self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
-            self.main_grid.attach(self.content, 0, 1, 1, 1)  # side bar not attached
+            if getattr(self, "content_overlay", None) is not None:
+                if self.content.get_parent() is None:
+                    self.content_overlay.add(self.content)
+                if self.edge_strip.get_parent() is None:
+                    self.content_overlay.add_overlay(self.edge_strip)
+                self.main_grid.attach(self.content_overlay, 0, 1, 1, 1)  # side bar not attached
+            else:
+                self.main_grid.attach(self.content, 0, 1, 1, 1)
         elif not self._screen.vertical_mode and position == "right":
             self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
             self.main_grid.attach(self.content, 0, 1, 1, 1)
