@@ -205,6 +205,12 @@ class BasePanel(ScreenPanel):
         self.titlebar.pack_end(self.nav_estop, False, False, 0)
         self.titlebar.pack_end(self.control["shortcut"], False, False, 0)
         self.titlebar.pack_end(self.control["battery_box"], False, False, 0)
+        # Clock: KlipperScreen has no system status bar above it, so the time lives here
+        if self.control["time"].get_parent() is not None:  # it sits in time_box by default
+            self.control["time"].get_parent().remove(self.control["time"])
+        self.control["time"].get_style_context().add_class("nav-time")
+        self.control["time"].set_valign(Gtk.Align.CENTER)
+        self.titlebar.pack_end(self.control["time"], False, False, 0)
         self.titlebar.pack_end(self.control["item_box"], False, False, 0)
 
         # Edge swipe from the left = Back (like iOS). The gesture lives ONLY on a thin
@@ -288,6 +294,9 @@ class BasePanel(ScreenPanel):
         if can_back:  # no_show_all box: show its (lazily added) temperature items explicitly
             for child in self.control["item_box"].get_children():
                 child.show_all()
+                label = find_widget(child, Gtk.Label)
+                if label is not None:  # temperatures must never collapse to "…"
+                    label.set_ellipsize(Pango.EllipsizeMode.NONE)
         # STOP is always visible; it can only act while Klipper is connected
         self.nav_estop.set_sensitive(bool(connected))
         # Notifications bell only when there is something to see
@@ -835,7 +844,9 @@ class BasePanel(ScreenPanel):
             rendered = self._render_title(title)
             stack = self._screen._cur_panels
             home = not stack or stack[-1] in ("main_menu", "splash_screen")
-            self.titlelbl.set_label(printer if (home or not rendered) else rendered)
+            # Unnamed printer (single default "Printer") -> "Home", like the back button says
+            root_title = printer or _("Home")
+            self.titlelbl.set_label(root_title if (home or not rendered) else rendered)
             return
         if not title:
             self.titlelbl.set_label(f"{printer}")

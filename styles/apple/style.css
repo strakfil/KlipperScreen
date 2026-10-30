@@ -410,3 +410,4 @@ button.standby-button, button.standby-button:active { background-color: #000000;
 .standby.standby-night label { color: rgba(255,69,58,0.85); }
 .standby.standby-night label.standby-secondary { color: rgba(255,69,58,0.55); }
 .macro-row-hidden label { color: @label2; }
+.title_bar label.nav-time { color: @label; font-weight: 600; margin: 0 .5em 0 .2em; }
