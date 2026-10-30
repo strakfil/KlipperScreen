@@ -226,6 +226,7 @@ class KlipperScreenConfig:
                     "reboot_action",
                     "appearance",
                     "accent",
+                    "action_bar_position",
                     "light_from",
                     "dark_from",
                 )
@@ -415,6 +416,22 @@ class KlipperScreenConfig:
                         {"name": _("Yellow"), "value": "yellow"},
                         {"name": _("Green"), "value": "green"},
                         {"name": _("Graphite"), "value": "graphite"},
+                    ],
+                }
+            },
+            {
+                "action_bar_position": {
+                    "category": _("Appearance"),
+                    "section": "main",
+                    "name": _("Action bar position"),
+                    "type": "dropdown",
+                    "tooltip": _("Restarts KlipperScreen"),
+                    "value": "left",
+                    "callback": screen.restart_ks,
+                    "options": [
+                        {"name": _("Left") + " " + _("(default)"), "value": "left"},
+                        {"name": _("Right"), "value": "right"},
+                        {"name": _("Bottom"), "value": "bottom"},
                     ],
                 }
             },

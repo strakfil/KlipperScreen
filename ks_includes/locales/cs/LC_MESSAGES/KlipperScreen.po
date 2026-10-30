@@ -1297,3 +1297,18 @@ msgstr "Displej"
 
 msgid "Others"
 msgstr "Ostatní"
+
+msgid "Action bar position"
+msgstr "Umístění ovládací lišty"
+
+msgid "Restarts KlipperScreen"
+msgstr "Restartuje KlipperScreen"
+
+msgid "Left"
+msgstr "Vlevo"
+
+msgid "Right"
+msgstr "Vpravo"
+
+msgid "Bottom"
+msgstr "Dole"

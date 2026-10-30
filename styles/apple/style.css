@@ -77,10 +77,11 @@ button.status { background-color: transparent; }
 }
 .title_bar label { font-weight: 700; }
 
-.action_bar {
-    background-color: @bg;
-    border-right: 1px solid @sep;
-}
+.action_bar { background-color: @bg; }
+.action_bar_left { border-right: 1px solid @sep; }
+.action_bar_right { border-left: 1px solid @sep; }
+.action_bar_bottom { border-top: 1px solid @sep; padding: 0 .5em; }
+.action_bar_bottom button { margin: .3em .25em; }
 .action_bar button {
     background-color: transparent;
     border-radius: .9em;

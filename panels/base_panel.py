@@ -130,19 +130,49 @@ class BasePanel(ScreenPanel):
 
         # Main layout
         self.main_grid = Gtk.Grid()
+        self.content_wrap = None  # scroll wrapper used when the action bar is at the bottom
         self._build_main_grid()
 
         self.update_time()
 
     def _reconfigure_main_grid(self):
         self.main_grid.remove(self.titlebar)
-        self.main_grid.remove(self.content)
+        if self.content_wrap is not None and self.content_wrap.get_parent() is self.main_grid:
+            self.main_grid.remove(self.content_wrap)
+            self.content_wrap.remove(self.content_wrap.get_child())  # viewport holding content
+            self.content_wrap = None
+        else:
+            self.main_grid.remove(self.content)
         self.main_grid.remove(self.action_bar)
         self._build_main_grid()
 
     def _build_main_grid(self):
         self.action_bar.set_size_request(self._gtk.action_bar_width, self._gtk.action_bar_height)
-        if self._screen.vertical_mode:
+        position = getattr(self._gtk, "action_bar_position", "left")
+        ctx = self.action_bar.get_style_context()
+        for pos in ("left", "right", "bottom"):
+            ctx.remove_class(f"action_bar_{pos}")
+        ctx.add_class(f"action_bar_{position}")
+        if not self._screen.vertical_mode and position == "right":
+            self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
+            self.main_grid.attach(self.content, 0, 1, 1, 1)
+            self.main_grid.attach(self.action_bar, 1, 0, 1, 2)
+            self.action_bar.set_orientation(orientation=Gtk.Orientation.VERTICAL)
+            self.action_bar.set_hexpand(False)
+            self.action_bar.set_vexpand(True)
+        elif not self._screen.vertical_mode and position == "bottom":
+            # A panel taller than the remaining height must scroll instead of pushing the
+            # action bar (incl. emergency stop) off the screen.
+            self.content_wrap = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+            self.content_wrap.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            self.content_wrap.add(self.content)
+            self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
+            self.main_grid.attach(self.content_wrap, 0, 1, 1, 1)
+            self.main_grid.attach(self.action_bar, 0, 2, 1, 1)
+            self.action_bar.set_orientation(orientation=Gtk.Orientation.HORIZONTAL)
+            self.action_bar.set_hexpand(True)
+            self.action_bar.set_vexpand(False)
+        elif self._screen.vertical_mode:
             self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
             self.main_grid.attach(self.content, 0, 1, 1, 1)
             self.main_grid.attach(self.action_bar, 0, 2, 1, 1)

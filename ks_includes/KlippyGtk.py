@@ -102,6 +102,17 @@ class KlippyGtk:
             self.content_width = width - self.action_bar_width
             self.content_height = height - self.titlebar_height
 
+        # Action bar position (landscape): left (default) / right / bottom (dock)
+        self.action_bar_position = "bottom" if vertical_mode else self.screen._config.get_main_config().get(
+            "action_bar_position", "left")
+        if self.action_bar_position not in ("left", "right", "bottom"):
+            self.action_bar_position = "left"
+        if not vertical_mode and self.action_bar_position == "bottom":
+            self.action_bar_width = int(width)
+            self.action_bar_height = int(height * 0.125)
+            self.content_width = width
+            self.content_height = height - self.titlebar_height - self.action_bar_height
+
         self.keyboard_height = self.content_height * 0.5
         if self.ultra_tall:
             self.keyboard_height *= 0.5
