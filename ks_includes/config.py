@@ -423,15 +423,16 @@ class KlipperScreenConfig:
                 "action_bar_position": {
                     "category": _("Appearance"),
                     "section": "main",
-                    "name": _("Action bar position"),
+                    "name": _("Navigation"),
                     "type": "dropdown",
                     "tooltip": _("Restarts KlipperScreen"),
-                    "value": "left",
+                    "value": "top",
                     "callback": screen.restart_ks,
                     "options": [
-                        {"name": _("Left") + " " + _("(default)"), "value": "left"},
-                        {"name": _("Right"), "value": "right"},
-                        {"name": _("Bottom"), "value": "bottom"},
+                        {"name": _("Navigation bar on top") + " " + _("(default)"), "value": "top"},
+                        {"name": _("Side bar left"), "value": "left"},
+                        {"name": _("Side bar right"), "value": "right"},
+                        {"name": _("Bar at the bottom"), "value": "bottom"},
                     ],
                 }
             },

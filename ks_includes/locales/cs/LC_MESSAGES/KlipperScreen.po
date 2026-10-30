@@ -1312,3 +1312,24 @@ msgstr "Vpravo"
 
 msgid "Bottom"
 msgstr "Dole"
+
+msgid "Navigation"
+msgstr "Navigace"
+
+msgid "Navigation bar on top"
+msgstr "Navigační lišta nahoře"
+
+msgid "Side bar left"
+msgstr "Boční lišta vlevo"
+
+msgid "Side bar right"
+msgstr "Boční lišta vpravo"
+
+msgid "Bar at the bottom"
+msgstr "Lišta dole"
+
+msgid "STOP"
+msgstr "STOP"
+
+msgid "Back"
+msgstr "Zpět"

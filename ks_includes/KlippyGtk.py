@@ -102,12 +102,19 @@ class KlippyGtk:
             self.content_width = width - self.action_bar_width
             self.content_height = height - self.titlebar_height
 
-        # Action bar position (landscape): left (default) / right / bottom (dock)
+        # Navigation (landscape): top = Apple-style navigation bar (default), or a classic
+        # action bar left / right / bottom (dock)
         self.action_bar_position = "bottom" if vertical_mode else self.screen._config.get_main_config().get(
-            "action_bar_position", "left")
-        if self.action_bar_position not in ("left", "right", "bottom"):
-            self.action_bar_position = "left"
-        if not vertical_mode and self.action_bar_position == "bottom":
+            "action_bar_position", "top")
+        if self.action_bar_position not in ("top", "left", "right", "bottom"):
+            self.action_bar_position = "top"
+        if not vertical_mode and self.action_bar_position == "top":
+            self.titlebar_height = max(self.font_size * 3.1, 52)  # 56 px touch targets
+            self.action_bar_width = 0
+            self.action_bar_height = 0
+            self.content_width = width
+            self.content_height = height - self.titlebar_height
+        elif not vertical_mode and self.action_bar_position == "bottom":
             self.action_bar_width = int(width)
             self.action_bar_height = int(height * 0.125)
             self.content_width = width
@@ -152,10 +159,10 @@ class KlippyGtk:
             return Gtk.Image()
         pixbuf = self.PixbufFromIcon(image_name, width, height, role)
         image = Gtk.Image.new_from_pixbuf(pixbuf) if pixbuf is not None else Gtk.Image()
-        if self.icon_palette is not None:
-            # Setting a Python attribute keeps the PyGObject wrapper alive with the widget,
-            # so refresh_icons() can find and recolour it after a light/dark switch.
-            image._ks_icon = (image_name, width, height, role)
+        # Setting a Python attribute keeps the PyGObject wrapper alive with the widget, so
+        # refresh_icons() can find and recolour it later - also icons created before the
+        # theme palette was known (e.g. the navigation bar built during start-up).
+        image._ks_icon = (image_name, width, height, role)
         return image
 
     def set_icon_palette(self, palette):

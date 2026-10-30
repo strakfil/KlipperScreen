@@ -12,6 +12,7 @@ from math import log
 from gi.repository import GdkPixbuf, Gio, GLib, Gtk, Pango
 from jinja2 import Environment
 
+from ks_includes.KlippyGtk import find_widget
 from ks_includes.screen_panel import ScreenPanel
 from ks_includes.svg_gradient import apply_filament_gradient, filament_colors_from_dict
 
@@ -120,12 +121,17 @@ class BasePanel(ScreenPanel):
         self.control["spoolman_box"].add(spoolman_box)
         self.control["spoolman_box"].connect("button-press-event", self.open_spool_panel)
 
+        self.nav_mode = (not self._screen.vertical_mode
+                         and getattr(self._gtk, "action_bar_position", "left") == "top")
         self.titlebar = Gtk.Box(spacing=5, valign=Gtk.Align.CENTER)
         self.titlebar.get_style_context().add_class("title_bar")
-        self.titlebar.add(self.control["item_box"])
-        self.titlebar.add(self.titlelbl)
-        self.titlebar.add(self.control["time_box"])
-        self.titlebar.add(self.control["battery_box"])
+        if self.nav_mode:
+            self._build_nav_bar()
+        else:
+            self.titlebar.add(self.control["item_box"])
+            self.titlebar.add(self.titlelbl)
+            self.titlebar.add(self.control["time_box"])
+            self.titlebar.add(self.control["battery_box"])
         self.set_title(title)
 
         # Main layout
@@ -146,6 +152,142 @@ class BasePanel(ScreenPanel):
         self.main_grid.remove(self.action_bar)
         self._build_main_grid()
 
+    # ------------------------------------------------------------------ navigation bar (Apple)
+    def _build_nav_bar(self):
+        """‹ Back (parent title) | Title | temps · notifications · STOP. Back long-press = Home."""
+        self.titlebar.get_style_context().add_class("nav-bar")
+        self.titlebar.set_size_request(-1, self._gtk.titlebar_height)
+        self.titlebar.set_valign(Gtk.Align.FILL)
+        size = self._gtk.font_size * 1.45
+
+        self.nav_back = Gtk.Button(label=_("Home"))
+        back_icon = self._gtk.Image("back", size, size, role="accent")
+        back_icon.show()  # the button uses no_show_all, so its image must be shown explicitly
+        self.nav_back.set_image(back_icon)
+        self.nav_back.set_always_show_image(True)
+        self.nav_back.get_style_context().add_class("nav-back")
+        self.nav_back.set_no_show_all(True)
+        self.nav_back.connect("clicked", self.back)
+        self.nav_back.connect("clicked", self._screen.remove_keyboard)
+        self._nav_long_press = Gtk.GestureLongPress.new(self.nav_back)
+        self._nav_long_press.connect("pressed", lambda *a: self._screen._menu_go_back(None, True))
+        label = find_widget(self.nav_back, Gtk.Label)
+        if label is not None:
+            label.set_ellipsize(Pango.EllipsizeMode.END)
+            label.set_max_width_chars(14)
+
+        self.titlelbl.get_style_context().add_class("nav-title")
+        self.control["item_box"].get_style_context().add_class("nav-temps")
+        self.control["item_box"].set_no_show_all(True)
+
+        self.nav_estop = Gtk.Button(label=_("STOP"))
+        self.nav_estop.set_image(self._gtk.Image("emergency", size, size, role="red"))
+        self.nav_estop.set_always_show_image(True)
+        self.nav_estop.get_style_context().add_class("nav-estop")
+        self.nav_estop.connect("clicked", self.emergency_stop)
+        self.control["shortcut"].get_style_context().add_class("nav-icon")
+        # The bell lives in the (unused) side bar by default: a widget can have one parent only
+        if self.control["shortcut"].get_parent() is not None:
+            self.control["shortcut"].get_parent().remove(self.control["shortcut"])
+        # Side-bar buttons expand; in the navigation bar it must stay a compact icon button
+        self.control["shortcut"].set_hexpand(False)
+        self.control["shortcut"].set_vexpand(False)
+        self.control["shortcut"].set_valign(Gtk.Align.CENTER)
+        self.control["shortcut"].set_image(self._gtk.Image(self.shortcut["icon"], size, size))
+        for widget in (self.nav_back, self.nav_estop):
+            widget.set_valign(Gtk.Align.CENTER)
+
+        self.titlebar.pack_start(self.nav_back, False, False, 0)
+        self.titlebar.pack_start(self.titlelbl, True, True, 0)
+        self.titlebar.pack_end(self.nav_estop, False, False, 0)
+        self.titlebar.pack_end(self.control["shortcut"], False, False, 0)
+        self.titlebar.pack_end(self.control["battery_box"], False, False, 0)
+        self.titlebar.pack_end(self.control["item_box"], False, False, 0)
+
+        # Edge swipe from the left = Back (like iOS). Captured on the window so it works
+        # over any panel; it claims the touch only once it is clearly a horizontal swipe.
+        self._edge = {"active": False, "done": False}
+        self._edge_drag = Gtk.GestureDrag.new(self._screen)
+        self._edge_drag.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        self._edge_drag.connect("drag-begin", self._edge_begin)
+        self._edge_drag.connect("drag-update", self._edge_update)
+        self._edge_drag.connect("drag-end", self._edge_end)
+
+    def _edge_begin(self, gesture, x, y):
+        self._edge = {"active": x <= self._gtk.font_size * 1.4 and y > self._gtk.titlebar_height,
+                      "done": False}
+
+    def _edge_update(self, gesture, dx, dy):
+        if not self._edge["active"] or self._edge["done"]:
+            return
+        if abs(dy) > self._gtk.font_size * 3:
+            self._edge["active"] = False  # vertical scroll, not a back swipe
+        elif dx > self._gtk.font_size * 1.2:
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)  # cancels the tap underneath
+            if dx > self._gtk.font_size * 4.5:
+                self._edge["done"] = True
+                if len(self._screen._cur_panels) > 1:
+                    self.back()
+
+    def _edge_end(self, gesture, dx, dy):
+        self._edge = {"active": False, "done": False}
+
+    def _render_title(self, title):
+        if not title:
+            return ""
+        try:
+            env = Environment(extensions=["jinja2.ext.i18n"], autoescape=True)
+            env.install_gettext_translations(self._config.get_lang())
+            return env.from_string(title).render()
+        except Exception:
+            return title
+
+    def _update_nav_bar(self):
+        printing, connected, printer_select = self.get_printer_state()
+        stack = self._screen._cur_panels
+        can_back = len(stack) > 1
+        self.nav_back.set_visible(can_back)
+        if can_back:
+            parent = stack[-2]
+            parent_panel = self._screen.panels.get(parent)
+            if parent in ("main_menu", "splash_screen") or parent_panel is None:
+                text = _("Home")
+            else:
+                text = self._render_title(getattr(parent_panel, "title", "")) or _("Back")
+            if self.nav_back.get_label() != text:
+                self.nav_back.set_label(text)
+            image = self.nav_back.get_image()
+            if image is not None:  # set_label() rebuilds the child; keep the chevron visible
+                image.show()
+        # Root screen (Home / print status) shows a large leading title, sub-pages a centred one
+        ctx = self.titlelbl.get_style_context()
+        centered = self.titlebar.get_center_widget() is self.titlelbl
+        if can_back and not centered:  # true centre of the bar, independent of side widths
+            self.titlebar.remove(self.titlelbl)
+            self.titlebar.set_center_widget(self.titlelbl)
+        elif not can_back and centered:
+            self.titlebar.set_center_widget(None)
+            self.titlebar.pack_start(self.titlelbl, True, True, 0)
+            self.titlebar.reorder_child(self.titlelbl, 1)
+        if can_back:
+            ctx.remove_class("nav-large-title")
+            self.titlelbl.set_halign(Gtk.Align.CENTER)
+        else:
+            ctx.add_class("nav-large-title")
+            self.titlelbl.set_halign(Gtk.Align.START)
+        self.titlelbl.show()
+        self.control["item_box"].set_visible(can_back)
+        if can_back:  # no_show_all box: show its (lazily added) temperature items explicitly
+            for child in self.control["item_box"].get_children():
+                child.show_all()
+        # STOP is always visible; it can only act while Klipper is connected
+        self.nav_estop.set_sensitive(bool(connected))
+        # Notifications bell only when there is something to see
+        if self.shortcut["panel"] == "notifications":
+            self.control["shortcut"].set_visible(self.shortcut["icon"] != "notifications")
+        else:
+            self.control["shortcut"].set_visible(True)
+
     def _build_main_grid(self):
         self.action_bar.set_size_request(self._gtk.action_bar_width, self._gtk.action_bar_height)
         position = getattr(self._gtk, "action_bar_position", "left")
@@ -153,7 +295,10 @@ class BasePanel(ScreenPanel):
         for pos in ("left", "right", "bottom"):
             ctx.remove_class(f"action_bar_{pos}")
         ctx.add_class(f"action_bar_{position}")
-        if not self._screen.vertical_mode and position == "right":
+        if not self._screen.vertical_mode and position == "top":
+            self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
+            self.main_grid.attach(self.content, 0, 1, 1, 1)  # side bar not attached
+        elif not self._screen.vertical_mode and position == "right":
             self.main_grid.attach(self.titlebar, 0, 0, 1, 1)
             self.main_grid.attach(self.content, 0, 1, 1, 1)
             self.main_grid.attach(self.action_bar, 1, 0, 1, 2)
@@ -214,6 +359,8 @@ class BasePanel(ScreenPanel):
 
         self.battery_icons = self.load_battery_icons()
         self.battery_percentage()
+        if getattr(self, "nav_mode", False):
+            self._gtk.refresh_icons([self.titlebar])
 
     def get_spoolman_icon_pixbuf(self, colors=None):
         if not colors:
@@ -401,6 +548,8 @@ class BasePanel(ScreenPanel):
         self.show_printer_select(len(self._config.get_printers()) > 1)
         for control in ("back", "home"):
             self.set_control_sensitive(len(self._screen._cur_panels) > 1, control=control)
+        if getattr(self, "nav_mode", False):
+            self._update_nav_bar()
 
     def add_content(self, panel):
         self.update_action_bar()
@@ -640,12 +789,15 @@ class BasePanel(ScreenPanel):
         else:
             icon = "notifications"
         self.shortcut["icon"] = icon
+        if getattr(self, "nav_mode", False):
+            self.control["shortcut"].set_visible(icon != "notifications")
         image = self.control["shortcut"].get_image()
         pixbuf = image.get_pixbuf() if image is not None else None
         if pixbuf is None:
             return
+        role = "red" if icon == "notifications_important" else None
         self.control["shortcut"].set_image(
-            self._gtk.Image(icon, pixbuf.get_width(), pixbuf.get_height())
+            self._gtk.Image(icon, pixbuf.get_width(), pixbuf.get_height(), role=role)
         )
 
     def show_printer_select(self, show=True):
@@ -663,6 +815,13 @@ class BasePanel(ScreenPanel):
             printer = self._screen.state.printer_name
         else:
             printer = ""
+        if getattr(self, "nav_mode", False):
+            # Navigation bar: the page title only; the root shows the printer name
+            rendered = self._render_title(title)
+            stack = self._screen._cur_panels
+            home = not stack or stack[-1] in ("main_menu", "splash_screen")
+            self.titlelbl.set_label(printer if (home or not rendered) else rendered)
+            return
         if not title:
             self.titlelbl.set_label(f"{printer}")
             return

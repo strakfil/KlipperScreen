@@ -370,3 +370,31 @@ button.tinted.color1, button.tinted.color2, button.tinted.color3, button.tinted.
 button.destructive.color1, button.destructive.color2, button.destructive.color3, button.destructive.color4 { background-color: @red_tint; }
 button.tinted:active, button.destructive:active { background-color: @fill_pressed; }
 .printing-info button, .printing-info-secondary button { background-color: transparent; }
+
+/* ---------- Navigation bar (default navigation) --------------------------- */
+.title_bar.nav-bar { padding: 0 .5em 0 .35em; min-height: 3.1em; }
+button.nav-back {
+    background-color: transparent;
+    border-radius: .8em;
+    margin: 0;
+    padding: 0 .6em 0 .1em;
+    min-height: 3.1em;
+}
+button.nav-back label { color: @accent; font-weight: 400; font-size: 1.05em; }
+button.nav-back:active { background-color: @fill; }
+.title_bar label.nav-title { font-weight: 600; font-size: 1.05em; }
+.title_bar label.nav-large-title { font-weight: 700; font-size: 1.45em; margin-left: .55em; }
+.nav-temps label { color: @label2; font-weight: 600; }
+.nav-temps { margin-right: .6em; }
+button.nav-icon { background-color: transparent; border-radius: .8em; margin: 0 .2em; min-width: 2.7em; min-height: 2.7em; }
+button.nav-estop {
+    background-color: @red_tint;
+    border-radius: .8em;
+    margin: .3em 0 .3em .5em;
+    padding: 0 .8em 0 .5em;
+    min-height: 2.5em;
+}
+button.nav-estop label { color: @red; font-weight: 700; }
+button.nav-estop:active { background-color: @red; }
+button.nav-estop:active label { color: #FFFFFF; }
+button.nav-estop:disabled { opacity: .45; }
